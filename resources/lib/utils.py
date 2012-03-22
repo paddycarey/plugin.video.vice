@@ -14,8 +14,6 @@ import xbmcplugin
 import StorageServer
 from resources.lib import vice
 
-from elementtree import ElementTree as ET
-
 ### get addon info
 __addon__             = xbmcaddon.Addon()
 __addonid__           = __addon__.getAddonInfo('id')
@@ -23,7 +21,7 @@ __addonidint__        = int(sys.argv[1])
 __addondir__          = xbmc.translatePath(__addon__.getAddonInfo('path'))
 
 # initialise cache object to speed up plugin operation
-cache = StorageServer.StorageServer(__addonid__ + '-ustreamvideos', 96)
+cache = StorageServer.StorageServer(__addonid__ + '-videourls', 6)
 
 def getParams():
     
@@ -137,6 +135,7 @@ def addNext(page, show_link):
     # add listitem object to list
     xbmcplugin.addDirectoryItem(handle = __addonidint__, url = u, listitem = li, isFolder = True)
 
+
 def addDir(title, thumbnail, url, description):
     
     """Add a 'Next Page' button to a directory listing
@@ -170,13 +169,13 @@ def playVideo(episode_link):
     
     """Resolve the provided url and play video"""
     
-    if re.search(r'part-\d$', episode_link):
+    if re.search(r'-\d$', episode_link):
         log('Multipart video found: %s' % episode_link)
         episode_link = episode_link.rstrip('123456789')
         stack_path = 'stack://'
         for i in range(1,100):
             # call getVideoUrl to resolve url for playback
-            videoUrl = vice.get_video_url(episode_link + str(i))
+            videoUrl = cache.cacheFunction(vice.get_video_url, episode_link + str(i))
     
             # set success to true if video found
             if videoUrl:
@@ -186,7 +185,7 @@ def playVideo(episode_link):
                 videoUrl = stack_path
                 break
     else:
-        videoUrl = vice.get_video_url(episode_link)
+        videoUrl = cache.cacheFunction(vice.get_video_url, episode_link)
     
     log('Video URL: %s' % videoUrl)
     

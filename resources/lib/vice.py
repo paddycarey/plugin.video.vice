@@ -39,7 +39,7 @@ def get_video_url(episode_link):
     
     except HTTPError:
         
-        return None
+        return ''
     
     js_player_url = soup.find('div', 'video_area').script['src']
     
@@ -49,7 +49,7 @@ def get_video_url(episode_link):
     
     except HTTPError:
         
-        return None
+        return ''
 
     mp_regex = re.compile("mobile_player_url=([^\+]*)")
     
@@ -61,7 +61,7 @@ def get_video_url(episode_link):
     
     except HTTPError:
         
-        return None
+        return ''
 
     vid_regex = re.compile("ipad_url\\\":\\\"([^\"]*)\"")
     
@@ -74,7 +74,13 @@ def get_episodes(show_link, page_number):
     
     show_page = 'http://www.vice.com%s?Article_page=%s' % (show_link, str(page_number))
     
-    soup = BeautifulSoup(get_remote_data(show_page))
+    try:
+        
+        soup = BeautifulSoup(get_remote_data(show_page))
+    
+    except HTTPError:
+        
+        return ''
     
     episode_list = soup.find('ul', 'story_list').findAll('li')
     

@@ -13,8 +13,7 @@ __addonid__           = __addon__.getAddonInfo('id')
 __addonidint__        = int(sys.argv[1])
 
 # initialise cache object to speed up plugin operation
-page_cache = StorageServer.StorageServer(__addonid__ + 'cached_pages', 1)
-video_cache = StorageServer.StorageServer(__addonid__ + 'cached_videos', 24 * 7)
+cache = StorageServer.StorageServer(__addonid__ + 'pages', 1)
 
 class Main:
 
@@ -31,7 +30,7 @@ class Main:
             
             # Get the current page number
             pageNum = int(params["page"])
-            utils.log('Page Found: %s' % show_link)
+            utils.log('Page Found: %s' % pageNum)
             
         except:
 
@@ -42,7 +41,7 @@ class Main:
             
             except:
                 
-                for show in vice.get_shows():
+                for show in cache.cacheFunction(vice.get_shows):
                     
                     utils.addDir(show['title'], show['thumb'], show['link'], show['description'])
             
@@ -52,9 +51,11 @@ class Main:
         
         else:
             
-            for episode in vice.get_episodes(show_link, pageNum):
+            for episode in cache.cacheFunction(vice.get_episodes, show_link, pageNum):
                     
                 utils.addVideo(episode['title'], episode['link'], episode['thumb'], episode['description'])
+
+            utils.addNext(pageNum + 1, show_link)
             
         # We're done with the directory listing
         utils.endDir()
