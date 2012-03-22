@@ -168,19 +168,34 @@ def endDir():
 
 def playVideo(episode_link):
     
-    """Resolve the provided url and play video
+    """Resolve the provided url and play video"""
     
-    Arguments:  url -- A string containing the url of the videos page on mmafighting.com"""
+    if re.search(r'part-\d$', episode_link):
+        log('Multipart video found: %s' % episode_link)
+        episode_link = episode_link.rstrip('123456789')
+        stack_path = 'stack://'
+        for i in range(1,100):
+            # call getVideoUrl to resolve url for playback
+            videoUrl = vice.get_video_url(episode_link + str(i))
     
-    # call getVideoUrl to resolve url for playback
-    videoUrl = vice.get_video_url(episode_link)
-    
-    # set success to true if video found
-    if videoUrl:
-        log('Successfully resolved video url: %s' % videoUrl)
-        success = True
+            # set success to true if video found
+            if videoUrl:
+                stack_path = stack_path + videoUrl + ' , '
+            else:
+                stack_path = stack_path.rstrip(' , ')
+                videoUrl = stack_path
+                break
     else:
-        log('Unable to resolve video url', xbmc.LOGERROR)
+        videoUrl = vice.get_video_url(episode_link)
+    
+    log('Video URL: %s' % videoUrl)
+    
+    if videoUrl:
+        
+        success = True
+        
+    else:
+        
         success = False
     
     # add video details to listitem

@@ -1,7 +1,7 @@
 import urllib2
 import re
 from BeautifulSoup import BeautifulSoup
-
+from urllib2 import HTTPError
 
 def get_remote_data(url):
     
@@ -33,18 +33,36 @@ def get_video_url(episode_link):
     
     episode_page = 'http://www.vice.com%s' % episode_link
     
-    soup = BeautifulSoup(get_remote_data(episode_page))
+    try:
+        
+        soup = BeautifulSoup(get_remote_data(episode_page))
+    
+    except HTTPError:
+        
+        return None
     
     js_player_url = soup.find('div', 'video_area').script['src']
     
-    jsplayer = get_remote_data(js_player_url)
+    try:
+        
+        jsplayer = get_remote_data(js_player_url)
+    
+    except HTTPError:
+        
+        return None
 
     mp_regex = re.compile("mobile_player_url=([^\+]*)")
     
     mobile_player_url = mp_regex.findall(jsplayer)[0].lstrip('\"').rstrip('\"')
 
-    mobile_player = get_remote_data(mobile_player_url + 'ipad').replace('\\\"', '\"')
+    try:
+    
+        mobile_player = get_remote_data(mobile_player_url + 'ipad').replace('\\\"', '\"')
+    
+    except HTTPError:
         
+        return None
+
     vid_regex = re.compile("ipad_url\\\":\\\"([^\"]*)\"")
     
     vid_url = vid_regex.findall(mobile_player)[0].replace('\\u0026', '&')
@@ -101,6 +119,6 @@ def get_shows():
 
 if __name__ == '__main__':
         
-        print get_shows()
-        print get_episodes('/americana', 1)
-        print get_video_url('/americana/2nd-revolutionary-war')
+        #print get_shows()
+        #print get_episodes('/americana', 1)
+        print get_video_url('/hamiltons-pharmacopeia/hamilton-and-the-philosophers-stone-part-3')
