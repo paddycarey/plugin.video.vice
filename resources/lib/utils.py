@@ -92,7 +92,7 @@ def addVideo(linkName = '', episode_link = '', thumbPath = '', plot = ''):
     """Add a video to an XBMC directory listing
     
     Arguments:  linkName -- A string containg the name of the video
-                url -- A string containing the direct url to the video
+                episode_link -- A string containing the relative url to the video page (will be resolved later)
                 thumbPath -- A string containg the url/path of the video's thumbnail image
                 date -- a dataetime object containg the date of the video"""
     

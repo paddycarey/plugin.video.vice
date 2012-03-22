@@ -3,6 +3,7 @@ import re
 from BeautifulSoup import BeautifulSoup
 from urllib2 import HTTPError
 
+
 def get_remote_data(url):
     
     """Retrieve and return remote resource as string
@@ -28,8 +29,6 @@ def get_remote_data(url):
 
 
 def get_video_url(episode_link):
-
-    # Create a new soup instance and assign a video list html to a variable
     
     episode_page = 'http://www.vice.com%s' % episode_link
     
@@ -122,9 +121,3 @@ def get_shows():
         shows.append(show_details)
 
     return shows
-
-if __name__ == '__main__':
-        
-        #print get_shows()
-        #print get_episodes('/americana', 1)
-        print get_video_url('/hamiltons-pharmacopeia/hamilton-and-the-philosophers-stone-part-3')

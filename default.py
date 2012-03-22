@@ -1,5 +1,4 @@
 import urllib
-import re
 import sys
 import StorageServer
 import xbmcaddon
