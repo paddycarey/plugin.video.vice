@@ -40,16 +40,19 @@ class Main:
             
             except:
                 
+                utils.log('Browsing all shows')
                 for show in cache.cacheFunction(vice.get_shows):
                     
                     utils.addDir(show['title'], show['thumb'], show['link'], show['description'])
             
             else:
                 
+                utils.log('Playing episode: %s' % episode_link)
                 utils.playVideo(episode_link)
         
         else:
             
+            utils.log('Browsing episodes for: %s' % show_link)
             for episode in cache.cacheFunction(vice.get_episodes, show_link, pageNum):
                     
                 utils.addVideo(episode['title'], episode['link'], episode['thumb'], episode['description'])

@@ -179,6 +179,7 @@ def playVideo(episode_link):
     
             # set success to true if video found
             if videoUrl:
+                log('Adding video to stack: %s' % videoUrl)
                 stack_path = stack_path + videoUrl + ' , '
             else:
                 stack_path = stack_path.rstrip(' , ')
