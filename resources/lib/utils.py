@@ -21,7 +21,7 @@ __addonidint__        = int(sys.argv[1])
 __addondir__          = xbmc.translatePath(__addon__.getAddonInfo('path'))
 
 # initialise cache object to speed up plugin operation
-cache = StorageServer.StorageServer(__addonid__ + '-videourls', 6)
+cache = StorageServer.StorageServer(__addonid__ + '-videourls', 3)
 
 def getParams():
     
