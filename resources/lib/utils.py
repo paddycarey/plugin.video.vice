@@ -169,7 +169,7 @@ def playVideo(episode_link):
     
     """Resolve the provided url and play video"""
     
-    if re.search(r'-\d$', episode_link):
+    if re.search(r'-1$', episode_link):
         log('Multipart video found: %s' % episode_link)
         episode_link = episode_link.rstrip('123456789')
         stack_path = 'stack://'
