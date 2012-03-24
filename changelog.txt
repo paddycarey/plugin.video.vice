@@ -1,2 +1,6 @@
+[B]0.2[/B]
+- Added subtitle support
+- Better multipart detection
+
 [B]0.1[/B]
 - Initial working version
