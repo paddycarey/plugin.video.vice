@@ -1,3 +1,7 @@
+[B]0.3[/B]
+- Added dialog before playing segment
+- Various cleanup
+
 [B]0.2[/B]
 - Added subtitle support
 - Better multipart detection

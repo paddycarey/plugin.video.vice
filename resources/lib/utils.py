@@ -72,6 +72,8 @@ def getParams():
 
 def convertSubs(sub_url):
     
+    """Download and convert subs from dxfp format to .srt that we can pass to xbmc"""
+    
     if not xbmcvfs.exists(__cachedir__):
         xbmcvfs.mkdir(os.path.split(__cachedir__)[0])
         xbmcvfs.mkdir(__cachedir__)

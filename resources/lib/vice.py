@@ -1,3 +1,4 @@
+# import required modules
 import urllib2
 import re
 from BeautifulSoup import BeautifulSoup
@@ -30,57 +31,79 @@ def get_remote_data(url):
 
 def get_video_details(episode_link):
     
+    """Retrieve video url and subtitle url for a given episode_link"""
+    
+    # generate video url
     episode_page = 'http://www.vice.com%s' % episode_link
     
+    # declare empty dict to store results
     results = {}
     
     try:
         
+        # retrieve and parse episode page
         soup = BeautifulSoup(get_remote_data(episode_page))
     
     except HTTPError:
         
+        # return empty string on httperror
         return ''
     
+    # find url of html5 player
     js_player_url = soup.find('div', 'video_area').script['src']
     
     try:
         
+        # retrieve and parse html5 player
         jsplayer = get_remote_data(js_player_url)
     
     except HTTPError:
         
+        # return empty string on httperror
         return ''
 
+    # compile regex to find link to mobile player
     mp_regex = re.compile("mobile_player_url=([^\+]*)")
     
+    # get mobile player url
     mobile_player_url = mp_regex.findall(jsplayer)[0].lstrip('\"').rstrip('\"')
 
     try:
     
+        # retrieve mobile player url
         mobile_player = get_remote_data(mobile_player_url + 'ipad').replace('\\\"', '\"')
     
     except HTTPError:
         
+        # return empty string on error
         return ''
 
+    # compile regex to find video url
     vid_regex = re.compile("ipad_url\\\":\\\"([^\"]*)\"")
     
+    # find video url
     vid_url = vid_regex.findall(mobile_player)[0].replace('\\u0026', '&')
 
+    # compile regex to find sub url
     sub_regex = re.compile("closed_caption_url\\\":\\\"([^\"]*)\"")
     
+    # find sub url
     sub_url = sub_regex.findall(mobile_player)[0]
-        
+    
+    # add results to dictionary
     results['vid_url'] = vid_url
     results['sub_url'] = sub_url
     
+    # return dictionary of urls
     return results
 
 
-def get_episodes(show_link, page_number):
+def get_episodes(show_link = '', page_number = 1):
     
-    show_page = 'http://www.vice.com%s?Article_page=%s' % (show_link, str(page_number))
+    if not show_link == '':
+        show_page = 'http://www.vice.com%s?Article_page=%s' % (show_link, str(page_number))
+    else:
+        show_page = 'http://www.vice.com/shows'
     
     try:
         
@@ -108,29 +131,9 @@ def get_episodes(show_link, page_number):
     return episodes
 
 
-def get_shows():
-    
-    show_page = 'http://www.vice.com/shows'
-    
-    soup = BeautifulSoup(get_remote_data(show_page))
-    
-    show_list = soup.find('ul', 'story_list').findAll('li')
-    
-    shows = []
-    
-    for show in show_list:
-        
-        show_details = {}
-        
-        show_details['link'] = show.a['href']
-        show_details['thumb'] = show.a.img['src']
-        show_details['title'] = show.h2.a.string
-        show_details['description'] = show.p.string.lstrip().rstrip()
-        
-        shows.append(show_details)
-
-    return shows
-
+# produce some test output when module run standalone
 if __name__ == '__main__':
 
-    print get_video_url('/vice-special/abel-ferraras-pizza-connection-episode-1')
+    print get_episodes()
+    print get_episodes('/vice-music-specials', 1)
+    print get_video_details('/vice-special/abel-ferraras-pizza-connection-episode-1')
