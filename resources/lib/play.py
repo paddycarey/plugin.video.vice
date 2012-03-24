@@ -155,8 +155,14 @@ def play_video(videoUrl, episode_name, episode_thumb):
             while not player.isPlaying():
                 player.sleep(100)
             
-            # retrieve and enable captions
-            player.setSubtitles(utils.convertSubs(videoUrl['sub_url']))
+            try:
+            
+                # retrieve and enable captions
+                player.setSubtitles(utils.convertSubs(videoUrl['sub_url']))
+            
+            except:
+                
+                log('Unable to load subtitles')
 
             # wait for player to finish
             while player.active:
