@@ -162,7 +162,7 @@ def play_video(videoUrl, episode_name, episode_thumb):
             
             except:
                 
-                log('Unable to load subtitles')
+                utils.log('Unable to load subtitles')
 
             # wait for player to finish
             while player.active:
