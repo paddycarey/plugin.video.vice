@@ -70,15 +70,26 @@ def play_episode(episode_link, episode_name, episode_thumb):
             # create progress dialog
             ret = pDialog.create('Vice.com', 'Checking for stream...')
 
+            utils.log('Checking for stream: %s' % episode_link + str(i))
+
             # call get_video_details to resolve url for playback and get sub url
             videoUrl = cache.cacheFunction(vice.get_video_details, episode_link + str(i))
     
             # check if was able to find video url
             if videoUrl == []:
                 
-                # workaround for situations where multipart videos do not all have same prefix e.g. "The VICE Guide to Belfast"
-                
-                if episode_link.startswith('/the-'):
+                # workaround for situations where multipart videos do not all conform to the same pattern e.g. "The VICE Guide to Belfast"
+                if episode_link.endswith('1-'):
+
+                    # remove '1-' from end of link
+                    episode_link = episode_link.replace('1-', '')
+                    
+                    utils.log('Checking for stream: %s' % episode_link + str(i))
+                    
+                    # call get_video_details to resolve url for playback
+                    videoUrl = cache.cacheFunction(vice.get_video_details, episode_link + str(i))
+
+                elif episode_link.split('/')[2].startswith('the-'):
                     
                     # close dialog and exit if no more parts found
                     pDialog.close()
@@ -88,7 +99,9 @@ def play_episode(episode_link, episode_name, episode_thumb):
                     
                     # add '/the' to start of episode name
                     episode_link = '/' + episode_link.split('/')[1] + '/' + 'the-' + episode_link.split('/')[2]
-                
+
+                    utils.log('Checking for stream: %s' % episode_link + str(i))
+
                     # call get_video_details to resolve url for playback
                     videoUrl = cache.cacheFunction(vice.get_video_details, episode_link + str(i))
             
@@ -97,7 +110,9 @@ def play_episode(episode_link, episode_name, episode_thumb):
             
             # update progress dialog
             pDialog.update(50, 'Loading stream...')
-            
+
+            utils.log('Loading stream: %s' % episode_link + str(i))
+
             # play video
             if not play_video(videoUrl, episode_name, episode_thumb):
                 
@@ -108,6 +123,8 @@ def play_episode(episode_link, episode_name, episode_thumb):
         
         # create progress dialog
         ret = pDialog.create('Vice.com', 'Loading stream...')
+        
+        utils.log('Loading stream: %s' % episode_link)
         
         # call get_video_details to resolve url for playback
         videoUrl = cache.cacheFunction(vice.get_video_details, episode_link)
