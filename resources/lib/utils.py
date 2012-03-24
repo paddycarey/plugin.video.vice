@@ -10,6 +10,8 @@ import xbmc
 import xbmcaddon
 import xbmcgui
 import xbmcplugin
+import xbmcvfs
+from BeautifulSoup import BeautifulSoup
 
 import StorageServer
 from resources.lib import vice
@@ -19,9 +21,39 @@ __addon__             = xbmcaddon.Addon()
 __addonid__           = __addon__.getAddonInfo('id')
 __addonidint__        = int(sys.argv[1])
 __addondir__          = xbmc.translatePath(__addon__.getAddonInfo('path'))
+__cachedir__          = os.path.join(xbmc.translatePath(__addon__.getAddonInfo('profile')), 'subs')
 
 # initialise cache object to speed up plugin operation
-cache = StorageServer.StorageServer(__addonid__ + '-videourls', 3)
+cache = StorageServer.StorageServer(__addonid__ + '-videodetails', 1)
+
+class XBMCPlayer(xbmc.Player):
+    def __init__( self, *args, **kwargs ):
+        log( "#XBMCPlayer#")
+        self.active = True
+        self.result = False
+
+    def onPlayBackPaused( self ):
+        log("#Im paused#")
+        
+    def onPlayBackResumed( self ):
+        log("#Im Resumed #")
+        
+    def onPlayBackStarted( self ):
+        log( "#Playback Started#")
+        self.active = True
+        
+    def onPlayBackEnded( self ):
+        log("#Playback Ended#")
+        self.active = False
+        self.result = 'ended'
+        
+    def onPlayBackStopped( self ):
+        log("## Playback Stopped ##")
+        self.active = False
+        self.result = 'stopped'
+
+    def sleep(self, s):
+        xbmc.sleep(s)
 
 def getParams():
     
@@ -73,6 +105,71 @@ def getParams():
     return param
 
 
+def convertSubs(sub_url):
+    
+    if not xbmcvfs.exists(__cachedir__):
+        xbmcvfs.mkdir(os.path.split(__cachedir__)[0])
+        xbmcvfs.mkdir(__cachedir__)
+    
+    sub_path = os.path.join(__cachedir__, sub_url.rsplit('/', 1)[1])
+    
+    if not xbmcvfs.exists(sub_path):
+        sub_file = open(sub_path, "wb")
+        response = urllib2.urlopen(sub_url)
+        sub_file.write(response.read())
+        sub_file.close()
+        response.close()
+    
+    subs = open(sub_path, 'r').read()
+    
+    finalSubs = ""
+    soup = BeautifulSoup(subs, convertEntities=BeautifulSoup.HTML_ENTITIES)
+    engSub = soup.find('div', attrs={'xml:lang': 'en'})
+    if engSub:
+        engSubs = engSub.findAll('p')
+        if engSubs:
+            for i, line in enumerate(engSubs):
+                tempSubArray = [0] * 4
+                begin = line['begin'].replace(':', ' ').replace('.', ' ').split()
+                dratn = line['dur'].replace(':', ' ').replace('.', ' ').split()
+                begin.reverse()
+                dratn.reverse()
+                
+                text = str(line.renderContents()).replace("<br />", "\\n").replace('\n', '').replace('\r', '')
+                text = re.sub(' +',' ', text).replace('\\n ', '\\n')
+                for n, cell in enumerate(begin):
+                    calcTime = int(begin[n]) + int(dratn[n])
+                    if n == 0 and calcTime > 1000:
+                        calcTime -= 1000
+                        tempSubArray[n+1] += 1
+                    if (n == 1 or n == 2) and calcTime > 60:
+                        calcTime -= 60
+                        tempSubArray[n+1] += 1
+                    tempSubArray[n] += calcTime
+                    
+                begin.reverse()
+                tempSubArray.reverse()
+                if tempSubArray[0] < 10:
+                    tempSubArray[0] = "0" + str(tempSubArray[0])
+                if tempSubArray[1] < 10:
+                    tempSubArray[1] = "0" + str(tempSubArray[1])
+                if tempSubArray[2] < 10:
+                    tempSubArray[2] = "0" + str(tempSubArray[2])
+                if tempSubArray[3] < 10:
+                    tempSubArray[3] = "00" + str(tempSubArray[3])
+                elif tempSubArray[3] < 100:
+                    tempSubArray[3] = "0" + str(tempSubArray[3])
+                curSubLine = str(i+1) + "\n" + str(begin[0]) + ":" + str(begin[1]) + ":" + str(begin[2]) + "," + str(begin[3]) + " --> "
+                curSubLine += str(tempSubArray[0]) + ":" + str(tempSubArray[1]) + ":" + str(tempSubArray[2]) + "," + str(tempSubArray[3]) + "\n" + text + "\n\n"
+                finalSubs += curSubLine
+    
+        sub_file = open(sub_path + '.srt', "wb")
+        sub_file.write(finalSubs)
+        sub_file.close()
+            
+    return sub_path + '.srt'
+
+
 def log(txt, severity=xbmc.LOGDEBUG):
     
     """Log txt to xbmc.log at specified severity
@@ -96,13 +193,13 @@ def addVideo(linkName = '', episode_link = '', thumbPath = '', plot = ''):
                 thumbPath -- A string containg the url/path of the video's thumbnail image
                 date -- a dataetime object containg the date of the video"""
     
-    url = sys.argv[0] + "?episode_link=%s" % episode_link
+    url = sys.argv[0] + "?episode_link=%s&episode_name=%s&episode_thumb=%s" % (episode_link, urllib.quote(linkName), urllib.quote(thumbPath))
     
     # initialise a listitem object to store video details
     li = xbmcgui.ListItem(linkName, iconImage = thumbPath, thumbnailImage = thumbPath)
     
     # set the video to playable
-    li.setProperty("IsPlayable", 'true')
+    li.setProperty("IsPlayable", 'false')
     
     # set the infolabels for the video
     li.setInfo( type="Video", infoLabels={ "title": linkName, "Plot": plot} )
@@ -165,41 +262,73 @@ def endDir():
     xbmcplugin.endOfDirectory(handle = __addonidint__)
 
 
-def playVideo(episode_link):
+def playVideo(episode_link, episode_name, episode_thumb):
     
     """Resolve the provided url and play video"""
-    
+        
     if re.search(r'-1$', episode_link):
         log('Multipart video found: %s' % episode_link)
         episode_link = episode_link.rstrip('123456789')
-        stack_path = 'stack://'
+        
         for i in range(1,100):
+
+            player = XBMCPlayer(xbmc.PLAYER_CORE_DVDPLAYER)
+
             # call getVideoUrl to resolve url for playback
-            videoUrl = cache.cacheFunction(vice.get_video_url, episode_link + str(i))
+            videoUrl = cache.cacheFunction(vice.get_video_details, episode_link + str(i))
     
             # set success to true if video found
-            if videoUrl:
-                log('Adding video to stack: %s' % videoUrl)
-                stack_path = stack_path + videoUrl + ' , '
+            if videoUrl == []:
+                
+                if episode_link.startswith('/the-'):
+                
+                    break
+
+                else:
+                    
+                    episode_link = '/' + episode_link.split('/')[1] + '/' + 'the-' + episode_link.split('/')[2]
+                
+                    # call getVideoUrl to resolve url for playback
+                    videoUrl = cache.cacheFunction(vice.get_video_details, episode_link + str(i))
+            
+            log('Video Details: %s' % str(videoUrl))
+                
+            if not videoUrl == [] and videoUrl['vid_url']:
+                
+                listitem = xbmcgui.ListItem(episode_name, iconImage = episode_thumb, thumbnailImage = episode_thumb)
+                listitem.setInfo('video', {'Title': episode_name})
+                player.play(videoUrl['vid_url'], listitem)
+    
+                while not player.isPlaying():
+                    player.sleep(100)
+                
+                player.setSubtitles(convertSubs(videoUrl['sub_url']))
+
+                while player.active:
+                    player.sleep(100)
+            
+                while not player.result:
+                    player.sleep(100)
+                
+                if player.result == 'stopped':
+                    break
+    
             else:
-                stack_path = stack_path.rstrip(' , ')
-                videoUrl = stack_path
+                
                 break
-    else:
-        videoUrl = cache.cacheFunction(vice.get_video_url, episode_link)
-    
-    log('Video URL: %s' % videoUrl)
-    
-    if videoUrl:
-        
-        success = True
-        
+
     else:
         
-        success = False
+        videoUrl = cache.cacheFunction(vice.get_video_details, episode_link)
     
-    # add video details to listitem
-    listitem = xbmcgui.ListItem(path = videoUrl)
-    
-    # play listitem
-    xbmcplugin.setResolvedUrl(handle = __addonidint__, succeeded = success, listitem = listitem)
+        if videoUrl['vid_url']:
+                
+            listitem = xbmcgui.ListItem(episode_name, iconImage = episode_thumb, thumbnailImage = episode_thumb)
+            listitem.setInfo('video', {'Title': episode_name})
+            player.play(videoUrl['vid_url'], listitem)
+            
+            while not player.isPlaying():
+                player.sleep(100)
+                
+            player.setSubtitles(convertSubs(videoUrl['sub_url']))
+

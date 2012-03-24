@@ -35,8 +35,14 @@ class Main:
 
             try:
                 
+                episode_name=urllib.unquote_plus(params["episode_name"])
+                utils.log('Episode Name Found: %s' % episode_name)
+                
                 episode_link=urllib.unquote_plus(params["episode_link"])
-                utils.log('Episode Found: %s' % episode_link)
+                utils.log('Episode Link Found: %s' % episode_link)
+                
+                episode_thumb=urllib.unquote_plus(params["episode_thumb"])
+                utils.log('Episode Thumb Found: %s' % episode_thumb)
             
             except:
                 
@@ -44,23 +50,27 @@ class Main:
                 for show in cache.cacheFunction(vice.get_shows):
                     
                     utils.addDir(show['title'], show['thumb'], show['link'], show['description'])
-            
+
+                # We're done with the directory listing
+                utils.endDir()
+                    
             else:
                 
                 utils.log('Playing episode: %s' % episode_link)
-                utils.playVideo(episode_link)
+                utils.playVideo(episode_link, episode_name, episode_thumb)
         
         else:
             
             utils.log('Browsing episodes for: %s' % show_link)
-            for episode in cache.cacheFunction(vice.get_episodes, show_link, pageNum):
+            #for episode in cache.cacheFunction(vice.get_episodes, show_link, pageNum):
+            for episode in vice.get_episodes(show_link, pageNum):
                     
                 utils.addVideo(episode['title'], episode['link'], episode['thumb'], episode['description'])
 
             utils.addNext(pageNum + 1, show_link)
             
-        # We're done with the directory listing
-        utils.endDir()
+            # We're done with the directory listing
+            utils.endDir()
             
 
 if __name__ == '__main__':

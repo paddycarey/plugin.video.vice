@@ -28,9 +28,11 @@ def get_remote_data(url):
     return data
 
 
-def get_video_url(episode_link):
+def get_video_details(episode_link):
     
     episode_page = 'http://www.vice.com%s' % episode_link
+    
+    results = {}
     
     try:
         
@@ -65,8 +67,15 @@ def get_video_url(episode_link):
     vid_regex = re.compile("ipad_url\\\":\\\"([^\"]*)\"")
     
     vid_url = vid_regex.findall(mobile_player)[0].replace('\\u0026', '&')
+
+    sub_regex = re.compile("closed_caption_url\\\":\\\"([^\"]*)\"")
     
-    return vid_url
+    sub_url = sub_regex.findall(mobile_player)[0]
+        
+    results['vid_url'] = vid_url
+    results['sub_url'] = sub_url
+    
+    return results
 
 
 def get_episodes(show_link, page_number):
@@ -121,3 +130,7 @@ def get_shows():
         shows.append(show_details)
 
     return shows
+
+if __name__ == '__main__':
+
+    print get_video_url('/vice-special/abel-ferraras-pizza-connection-episode-1')
