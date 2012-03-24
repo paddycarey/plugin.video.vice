@@ -4,6 +4,7 @@ import StorageServer
 import xbmcaddon
 
 from resources.lib import vice
+from resources.lib import play
 from resources.lib import utils
 
 ### get addon info
@@ -57,7 +58,7 @@ class Main:
             else:
                 
                 utils.log('Playing episode: %s' % episode_link)
-                utils.playVideo(episode_link, episode_name, episode_thumb)
+                play.play_episode(episode_link, episode_name, episode_thumb)
         
         else:
             
