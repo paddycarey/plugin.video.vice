@@ -326,7 +326,9 @@ def playVideo(episode_link, episode_name, episode_thumb):
     else:
         
         videoUrl = cache.cacheFunction(vice.get_video_details, episode_link)
-    
+        
+        player = XBMCPlayer(xbmc.PLAYER_CORE_DVDPLAYER)
+
         if videoUrl['vid_url']:
                 
             listitem = xbmcgui.ListItem(episode_name, iconImage = episode_thumb, thumbnailImage = episode_thumb)
