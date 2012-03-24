@@ -112,13 +112,19 @@ def convertSubs(sub_url):
         xbmcvfs.mkdir(__cachedir__)
     
     sub_path = os.path.join(__cachedir__, sub_url.rsplit('/', 1)[1])
+    sub_path_srt = sub_path + '.srt'
     
-    if not xbmcvfs.exists(sub_path):
+    if xbmcvfs.exists(sub_path):
+        xbmcvfs.delete(sub_path)
+    
+    if not xbmcvfs.exists(sub_path_srt):
         sub_file = open(sub_path, "wb")
         response = urllib2.urlopen(sub_url)
         sub_file.write(response.read())
         sub_file.close()
         response.close()
+    else:
+        return sub_path_srt
     
     subs = open(sub_path, 'r').read()
     
@@ -163,11 +169,11 @@ def convertSubs(sub_url):
                 curSubLine += str(tempSubArray[0]) + ":" + str(tempSubArray[1]) + ":" + str(tempSubArray[2]) + "," + str(tempSubArray[3]) + "\n" + text + "\n\n"
                 finalSubs += curSubLine
     
-        sub_file = open(sub_path + '.srt', "wb")
+        sub_file = open(sub_path_srt, "wb")
         sub_file.write(finalSubs)
         sub_file.close()
             
-    return sub_path + '.srt'
+    return sub_path_srt
 
 
 def log(txt, severity=xbmc.LOGDEBUG):
