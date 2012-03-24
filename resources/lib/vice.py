@@ -44,9 +44,10 @@ def get_video_details(episode_link):
         # retrieve and parse episode page
         soup = BeautifulSoup(get_remote_data(episode_page))
     
-    except HTTPError:
+    except:
         
-        # return empty string on httperror
+        utils.log('Error retrieving video details from %s' % episode_link)
+        # return empty string on httperrorr
         return ''
     
     # find url of html5 player
@@ -57,8 +58,9 @@ def get_video_details(episode_link):
         # retrieve and parse html5 player
         jsplayer = get_remote_data(js_player_url)
     
-    except HTTPError:
+    except:
         
+        utils.log('Error retrieving video details from %s' % episode_link)
         # return empty string on httperror
         return ''
 
@@ -73,8 +75,9 @@ def get_video_details(episode_link):
         # retrieve mobile player url
         mobile_player = get_remote_data(mobile_player_url + 'ipad').replace('\\\"', '\"')
     
-    except HTTPError:
+    except:
         
+        utils.log('Error retrieving video details from %s' % episode_link)
         # return empty string on error
         return ''
 
