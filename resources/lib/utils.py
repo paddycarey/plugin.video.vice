@@ -26,6 +26,8 @@ __cachedir__          = os.path.join(xbmc.translatePath(__addon__.getAddonInfo('
 # initialise cache object to speed up plugin operation
 cache = StorageServer.StorageServer(__addonid__ + '-videodetails', 1)
 
+pDialog = xbmcgui.DialogProgress()
+
 class XBMCPlayer(xbmc.Player):
     def __init__( self, *args, **kwargs ):
         log( "#XBMCPlayer#")
@@ -41,6 +43,7 @@ class XBMCPlayer(xbmc.Player):
     def onPlayBackStarted( self ):
         log( "#Playback Started#")
         self.active = True
+        pDialog.close()
         
     def onPlayBackEnded( self ):
         log("#Playback Ended#")
@@ -280,6 +283,8 @@ def playVideo(episode_link, episode_name, episode_thumb):
 
             player = XBMCPlayer(xbmc.PLAYER_CORE_DVDPLAYER)
 
+            ret = pDialog.create('Vice.com', 'Loading stream...')
+
             # call getVideoUrl to resolve url for playback
             videoUrl = cache.cacheFunction(vice.get_video_details, episode_link + str(i))
     
@@ -324,6 +329,8 @@ def playVideo(episode_link, episode_name, episode_thumb):
                 break
 
     else:
+        
+        ret = pDialog.create('Vice.com', 'Loading stream...')
         
         videoUrl = cache.cacheFunction(vice.get_video_details, episode_link)
         
