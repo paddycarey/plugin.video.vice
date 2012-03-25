@@ -112,8 +112,9 @@ def get_episodes(show_link = '', page_number = 1):
         
         soup = BeautifulSoup(get_remote_data(show_page))
     
-    except HTTPError:
+    except:
         
+        utils.log('Error retrieving episode/show details')
         return ''
     
     episode_list = soup.find('ul', 'story_list').findAll('li')
